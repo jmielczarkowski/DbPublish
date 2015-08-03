@@ -15,13 +15,8 @@ public class MainActivity : global::Xamarin.Forms.Platform.Android.FormsApplicat
 
 		global::Xamarin.Forms.Forms.Init (this, bundle);
 
-        var hasExpansionFiles = FileAccessHelper.AreExpansionFilesDelivered();
-
-        if (hasExpansionFiles)
-        {
-            string dbPath = FileAccessHelper.GetLocalFilePath("people.db3");
-            LoadApplication(new People.App(dbPath, new SQLitePlatformAndroid()));
-        }
+        if(FileAccessHelper.ProcessExpansionFiles())
+            LoadApplication(new People.App(FileAccessHelper.GetLocalFilePath(), new SQLitePlatformAndroid()));
         else
             Log.WriteLine(LogPriority.Warn, "Expansion Files", "Expansion file is missing, run download service...");
 	}

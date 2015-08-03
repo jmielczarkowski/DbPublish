@@ -4,12 +4,16 @@ using Android.App;
 using Android.Content;
 using ExpansionDownloader.Database;
 using System.Linq;
+using System.IO.Compression.Zip;
+using Android.Util;
 
 namespace People.Droid
 {
 public class FileAccessHelper
 {
-    public static bool AreExpansionFilesDelivered()
+    public static readonly string dbFileName = "people.db3";
+
+    private static bool AreExpansionFilesDelivered()
     {
         var downloads = DownloadsDatabase.GetDownloads();
         return downloads.Any() && downloads.All(x => DoesFileExist(x.FileName, x.TotalBytes, false));
@@ -36,25 +40,50 @@ public class FileAccessHelper
         return Path.Combine(root, fileName);
     }
 
-	public static string GetLocalFilePath (string filename)
+	public static string GetLocalFilePath ()
 	{
 		string path = Environment.GetFolderPath (Environment.SpecialFolder.Personal);
-        return Path.Combine(path, filename);
+        return Path.Combine(path, dbFileName);
 	}
 
-	private static void CopyDatabaseIfNotExists (string dbPath)
+    private static void CopyZipDatabase(ZipFileEntry entry, string name, string path)
 	{
-		if (!File.Exists (dbPath)) {
-			using (var br = new BinaryReader (Application.Context.Assets.Open ("people.db3"))) {
-				using (var bw = new BinaryWriter (new FileStream (dbPath, FileMode.Create))) {
-					byte[] buffer = new byte[2048];
-					int length = 0;
-					while ((length = br.Read (buffer, 0, buffer.Length)) > 0) {
-						bw.Write (buffer, 0, length);
-					}
-				}
-			}
-		}
+        using (var zip = new ZipFile(entry.ZipFileName))
+        {
+            using (var stream = zip.ReadFile(entry))
+            {
+                using (BinaryReader br = new BinaryReader(stream))
+                {
+                    using (BinaryWriter bw = new BinaryWriter(new FileStream(path, FileMode.Create)))
+                    {
+                        byte[] buffer = new byte[2048];
+                        int length = 0;
+                        while ((length = br.Read(buffer, 0, buffer.Length)) > 0)
+                        {
+                            bw.Write(buffer, 0, length);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    internal static bool ProcessExpansionFiles()
+    {
+        var localFilePath = GetLocalFilePath();
+
+        if(File.Exists(localFilePath))
+            return true;
+
+        var hasExpansionFiles = FileAccessHelper.AreExpansionFilesDelivered();
+        if (hasExpansionFiles)
+        {
+            var expansionFiles = ApkExpansionSupport.GetApkExpansionZipFile(Application.Context, Application.Context.PackageManager.GetPackageInfo(Application.Context.PackageName, 0).VersionCode, 0);
+            CopyZipDatabase(expansionFiles.GetEntry(dbFileName), dbFileName, localFilePath);
+            return true;
+        }
+        else
+            return false;
     }
 }
 }
