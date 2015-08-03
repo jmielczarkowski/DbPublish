@@ -1,11 +1,41 @@
 using System;
 using System.IO;
 using Android.App;
+using Android.Content;
+using ExpansionDownloader.Database;
+using System.Linq;
 
 namespace People.Droid
 {
 public class FileAccessHelper
 {
+    private static bool AreExpansionFilesDelivered(Context context)
+    {
+        var downloads = DownloadsDatabase.GetDownloads();
+        return downloads.Any() && downloads.All(x => DoesFileExist(context, x.FileName, x.TotalBytes, false));
+    }
+
+    public static bool DoesFileExist(Context context, string fileName, long fileSize, bool deleteFileOnMismatch)
+    {
+        var fileForNewFile = new FileInfo(GenerateSaveFileName(context, fileName));
+        if (fileForNewFile.Exists)
+        {
+            if (fileForNewFile.Length == fileSize)
+                return true;
+
+            if (deleteFileOnMismatch)
+                fileForNewFile.Delete();
+        }
+
+        return false;
+    }
+
+    public static string GenerateSaveFileName(Context context, string fileName)
+    {
+        var root = Android.OS.Environment.ExternalStorageDirectory.AbsolutePath + string.Format("{0}Android{0}obb{0}", Path.DirectorySeparatorChar) + context.PackageName;
+        return Path.Combine(root, fileName);
+    }
+
 	public static string GetLocalFilePath (string filename)
 	{
 		string path = Environment.GetFolderPath (Environment.SpecialFolder.Personal);
