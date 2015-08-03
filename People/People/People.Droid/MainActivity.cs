@@ -1,6 +1,7 @@
 ﻿using Android.App;
 using Android.Content.PM;
 using Android.OS;
+using Android.Util;
 using SQLite.Net.Platform.XamarinAndroid;
 
 namespace People.Droid
@@ -14,9 +15,15 @@ public class MainActivity : global::Xamarin.Forms.Platform.Android.FormsApplicat
 
 		global::Xamarin.Forms.Forms.Init (this, bundle);
 
-		string dbPath = FileAccessHelper.GetLocalFilePath ("people.db3");
+        var hasExpansionFiles = FileAccessHelper.AreExpansionFilesDelivered();
 
-		LoadApplication (new People.App (dbPath, new SQLitePlatformAndroid ()));
+        if (hasExpansionFiles)
+        {
+            string dbPath = FileAccessHelper.GetLocalFilePath("people.db3");
+            LoadApplication(new People.App(dbPath, new SQLitePlatformAndroid()));
+        }
+        else
+            Log.WriteLine(LogPriority.Warn, "Expansion Files", "Expansion file is missing, run download service...");
 	}
 }
 }
