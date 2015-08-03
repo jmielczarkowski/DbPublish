@@ -9,15 +9,15 @@ namespace People.Droid
 {
 public class FileAccessHelper
 {
-    private static bool AreExpansionFilesDelivered(Context context)
+    private static bool AreExpansionFilesDelivered()
     {
         var downloads = DownloadsDatabase.GetDownloads();
-        return downloads.Any() && downloads.All(x => DoesFileExist(context, x.FileName, x.TotalBytes, false));
+        return downloads.Any() && downloads.All(x => DoesFileExist(x.FileName, x.TotalBytes, false));
     }
 
-    public static bool DoesFileExist(Context context, string fileName, long fileSize, bool deleteFileOnMismatch)
+    public static bool DoesFileExist(string fileName, long fileSize, bool deleteFileOnMismatch)
     {
-        var fileForNewFile = new FileInfo(GenerateSaveFileName(context, fileName));
+        var fileForNewFile = new FileInfo(GenerateSaveFileName(fileName));
         if (fileForNewFile.Exists)
         {
             if (fileForNewFile.Length == fileSize)
@@ -30,9 +30,9 @@ public class FileAccessHelper
         return false;
     }
 
-    public static string GenerateSaveFileName(Context context, string fileName)
+    public static string GenerateSaveFileName(string fileName)
     {
-        var root = Android.OS.Environment.ExternalStorageDirectory.AbsolutePath + string.Format("{0}Android{0}obb{0}", Path.DirectorySeparatorChar) + context.PackageName;
+        var root = Android.OS.Environment.ExternalStorageDirectory.AbsolutePath + string.Format("{0}Android{0}obb{0}", Path.DirectorySeparatorChar) + Application.Context.PackageName;
         return Path.Combine(root, fileName);
     }
 
@@ -59,6 +59,6 @@ public class FileAccessHelper
 				}
 			}
 		}
-	}
+    }
 }
 }
