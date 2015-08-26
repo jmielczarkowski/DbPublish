@@ -15,10 +15,10 @@ public class MainActivity : global::Xamarin.Forms.Platform.Android.FormsApplicat
 
 		global::Xamarin.Forms.Forms.Init (this, bundle);
 
-        if(FileAccessHelper.ProcessExpansionFiles())
+        if (FileAccessHelper.ProcessExpansionDatabase())
             LoadApplication(new People.App(FileAccessHelper.GetLocalFilePath(), new SQLitePlatformAndroid()));
         else
-            Log.WriteLine(LogPriority.Warn, "Expansion Files", "Expansion file is missing, run download service...");
+            Log.WriteLine(LogPriority.Warn, "Expansion Files", "Expansion process failed...");
 	}
 }
 }

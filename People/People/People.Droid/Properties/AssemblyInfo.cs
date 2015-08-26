@@ -37,3 +37,5 @@ using LicenseVerificationLibrary;
 [assembly: UsesPermission(Android.Manifest.Permission.WakeLock)]
 [assembly: UsesPermission(Android.Manifest.Permission.AccessWifiState)]
 [assembly: UsesPermission(LicenseChecker.Manifest.Permission.CheckLicense)]
+[assembly: UsesPermission("com.android.vending.CHECK_LICENSE")]
+

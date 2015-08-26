@@ -13,33 +13,6 @@ public class FileAccessHelper
 {
     public static readonly string dbFileName = "people.db3";
 
-    private static bool AreExpansionFilesDelivered()
-    {
-        var downloads = DownloadsDatabase.GetDownloads();
-        return downloads.Any() && downloads.All(x => DoesFileExist(x.FileName, x.TotalBytes, false));
-    }
-
-    private static bool DoesFileExist(string fileName, long fileSize, bool deleteFileOnMismatch)
-    {
-        var fileForNewFile = new FileInfo(GenerateSaveFileName(fileName));
-        if (fileForNewFile.Exists)
-        {
-            if (fileForNewFile.Length == fileSize)
-                return true;
-
-            if (deleteFileOnMismatch)
-                fileForNewFile.Delete();
-        }
-
-        return false;
-    }
-
-    private static string GenerateSaveFileName(string fileName)
-    {
-        var root = Android.OS.Environment.ExternalStorageDirectory.AbsolutePath + string.Format("{0}Android{0}obb{0}", Path.DirectorySeparatorChar) + Application.Context.PackageName;
-        return Path.Combine(root, fileName);
-    }
-
 	public static string GetLocalFilePath ()
 	{
 		string path = Environment.GetFolderPath (Environment.SpecialFolder.Personal);
@@ -68,22 +41,23 @@ public class FileAccessHelper
         }
     }
 
-    internal static bool ProcessExpansionFiles()
+    internal static bool ProcessExpansionDatabase()
     {
         var localFilePath = GetLocalFilePath();
 
+        // Check if database file exists, so there is no point in processing data
         if(File.Exists(localFilePath))
             return true;
 
-        var hasExpansionFiles = FileAccessHelper.AreExpansionFilesDelivered();
-        if (hasExpansionFiles)
-        {
-            var expansionFiles = ApkExpansionSupport.GetApkExpansionZipFile(Application.Context, Application.Context.PackageManager.GetPackageInfo(Application.Context.PackageName, 0).VersionCode, 0);
-            CopyZipDatabase(expansionFiles.GetEntry(dbFileName), dbFileName, localFilePath);
-            return true;
-        }
-        else
+        var expansionFiles = ApkExpansionSupport.GetApkExpansionZipFile(Application.Context, Application.Context.PackageManager.GetPackageInfo(Application.Context.PackageName, 0).VersionCode, 0);
+
+        // Check if there is expansion file available
+        var expansionFileEntry = expansionFiles.GetEntry(dbFileName);
+        if (expansionFileEntry == null)
             return false;
+
+        CopyZipDatabase(expansionFiles.GetEntry(dbFileName), dbFileName, localFilePath);
+        return true;
     }
 }
 }
